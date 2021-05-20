@@ -1,0 +1,4 @@
+# Project exclude paths
+/chat-common/target/
+/chat_client/target/
+/chat_server/target/
