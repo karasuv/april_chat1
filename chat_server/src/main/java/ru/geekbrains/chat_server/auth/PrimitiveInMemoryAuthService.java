@@ -8,6 +8,8 @@ import java.util.List;
 public class PrimitiveInMemoryAuthService implements AuthService {
     private Connection connection;
     private Statement statement;
+    private PreparedStatement ps;
+    private String select_user = "select * from users_table where log_in = ?; ";
     private List<User> users;
 
     public PrimitiveInMemoryAuthService() {
@@ -61,7 +63,11 @@ public class PrimitiveInMemoryAuthService implements AuthService {
         try {
             connection = DriverManager.getConnection("jdbc:sqlite:users.db");
             statement = connection.createStatement();
-            ResultSet rs = statement.executeQuery("select * from users_table ");
+            //ResultSet rs = statement.executeQuery("select * from users_table ");
+            ps = connection.prepareStatement(select_user);
+            ps.setString(1,login);
+            ResultSet rs = ps.executeQuery();
+
                 while (rs.next()) {
 
 
@@ -76,10 +82,18 @@ public class PrimitiveInMemoryAuthService implements AuthService {
             e.printStackTrace();
         } finally {
             try {
+                if (ps != null) ps.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+
+            try {
                 if (statement != null) statement.close();
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
+
+
 
             try {
                 if (connection != null) connection.close();

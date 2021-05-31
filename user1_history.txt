@@ -1,0 +1,15 @@
+[ME] 1
+[ME] 2
+[ME] 3
+[ME] 4
+[ME] 5
+[user2] [pub] 6
+[user2] [pub] 7
+[user2] [pub] 8
+[user2] [pub] 9
+[user2] [pub] 0
+[ME] новое сообщение
+[ME] 123456
+[ME] 654321ё
+[user2] [pub] qwerty
+[user2] [pub] ytrewq
