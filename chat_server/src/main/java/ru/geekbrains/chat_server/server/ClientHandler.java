@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
     private static final long AUTH_TIMEOUT = 20_000;
@@ -17,6 +19,7 @@ public class ClientHandler {
     private DataOutputStream outputStream;
     private DataInputStream inputStream;
     private String currentUsername;
+
 
     public ClientHandler(Socket socket, ChatServer chatServer) {
         try {
@@ -31,14 +34,15 @@ public class ClientHandler {
     }
 
     public void handle() {
-        new Thread(() -> {
+      //  new Thread(() -> {
+            chatServer.getExecutorService().execute(() -> {
             try {
                 authenticate();
                 readMessages();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }).start();
+        });
     }
 
     private void readMessages() throws IOException {
@@ -137,6 +141,7 @@ public class ClientHandler {
         try {
             chatServer.unsubscribe(this);
             socket.close();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
