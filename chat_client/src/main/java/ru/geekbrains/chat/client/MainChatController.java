@@ -21,11 +21,16 @@ import ru.geekbrains.chat.client.network.ChatMessageServiceImpl;
 import ru.geekbrains.chat.client.network.MessageProcessor;
 
 
+import javax.xml.xpath.XPath;
 import java.awt.*;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class MainChatController implements Initializable, MessageProcessor {
@@ -50,8 +55,42 @@ public class MainChatController implements Initializable, MessageProcessor {
     }
 
     public void exit(ActionEvent actionEvent) {
+       // saveToLogfileHistory();
+
+
         Platform.exit();
     }
+    private void saveToLogfileHistory(String msgTextSaveToLog) {
+        String logfile=currentName+"_history.txt";
+
+        String str = null;
+        String[] lines;
+        BufferedWriter bw=null;
+
+
+
+        try {
+            bw = new BufferedWriter(new FileWriter(logfile,true));
+//            str = chatArea.getText();
+//            lines = chatArea.getText().split("\\n");
+//            for (int i = 0; i < lines.length ; i++) {
+//                bw.write(lines[i]+"\n");
+//
+//            }
+            bw.write(msgTextSaveToLog);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+               // if (br!=null) br.close();
+                if (bw!=null) bw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
 
     public void showHelp(ActionEvent actionEvent) throws URISyntaxException, IOException {
         Desktop desktop = Desktop.getDesktop();
@@ -73,6 +112,7 @@ public class MainChatController implements Initializable, MessageProcessor {
         msg.setBody(text);
         messageService.send(msg.marshall());
         chatArea.appendText(String.format("[ME] %s\n", text));
+        saveToLogfileHistory(String.format("[ME] %s\n", text));
         inputField.clear();
     }
 
@@ -81,6 +121,7 @@ public class MainChatController implements Initializable, MessageProcessor {
         String modifier = msg.getMessageType().equals(MessageType.PUBLIC) ? "[pub]" : "[priv]";
         String text = String.format("[%s] %s %s\n", msg.getFrom(), modifier, msg.getBody());
         chatArea.appendText(text);
+        saveToLogfileHistory(text);
     }
 
     private void showError(Exception e) {
@@ -138,7 +179,56 @@ public class MainChatController implements Initializable, MessageProcessor {
     public void initialize(URL location, ResourceBundle resources) {
         this.messageService = new ChatMessageServiceImpl("localhost", 12256, this);
 //        this.messageService.connect();
+
     }
+
+    private void loadHistoryFromLogFile() {
+
+        String logfile=this.currentName+"_history.txt";
+        File file = new File(logfile);
+        try {
+            if (!file.canRead()) file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String str;
+
+        BufferedReader br = null;
+        ArrayList<String> lines = new ArrayList<String>();
+
+            try{
+                br = new BufferedReader(new InputStreamReader(new FileInputStream(logfile)));
+                while((str = br.readLine())!= null) {
+                    lines.add(str);
+
+
+                }
+                int startHistory;
+                if (lines.size()>100) startHistory=lines.size()-100;
+                else startHistory=0;
+
+                for (int i = startHistory; i < lines.size(); i++) {
+                    chatArea.appendText(lines.get(i)+"\n");
+                }
+                //chatArea.appendText(str+"\n");
+            } catch ( IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                try {
+                    if (br!=null) br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+
+
+
+
+
 
     @Override
     public void processMessage(String msg) {
@@ -157,6 +247,7 @@ public class MainChatController implements Initializable, MessageProcessor {
                         case AUTH_CONFIRM: {
                             this.currentName = message.getBody();
                             App.stage1.setTitle(currentName);
+                            loadHistoryFromLogFile();
                             break;
                         }
                         case ERROR:
